@@ -62,23 +62,34 @@ def matrix_sign(X):
     return X
 
 def solve_continuous_are(A, B, Q, R):
+    """Solve the continuous-time algebraic Riccati equation.
 
+    A^T P + P A - P B R^{-1} B^T P + Q = 0.
+
+    Using Hamiltonian eigen-decomposition so this works without scipy.
+    """
     n = A.shape[0]
-
     R_inv = np.linalg.inv(R)
 
-    H = np.block([
+    H = np.block(
+        [
+            [A, -B @ R_inv @ B.T],
+            [-Q, -A.T],
+        ]
+    )
 
-        [A, B @ R_inv @ B.T],
+    eigvals, eigvecs = np.linalg.eig(H)
+    stable = np.real(eigvals) < 0
+    if np.count_nonzero(stable) != n:
+        raise np.linalg.LinAlgError("Unable to find stable invariant subspace for CARE")
 
-        [Q, A.T]
+    U = eigvecs[:, stable]
+    Ux = U[:n, :]
+    Uy = U[n:, :]
 
-    ])
+    if np.linalg.matrix_rank(Ux) < n:
+        raise np.linalg.LinAlgError("Stable eigenvector subspace is singular for CARE")
 
-    S = matrix_sign(H)
-
-    P = S[n:, :n]
-
-    P = (P + P.T) / 2  # symmetrize
-
+    P = np.real(Uy @ np.linalg.inv(Ux))
+    P = (P + P.T) / 2
     return P
