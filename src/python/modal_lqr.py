@@ -136,12 +136,23 @@ def initial_state(
     return np.concatenate([q0, p0])
 
 
+def _choose_nt_for_stability(model: MembraneModel, T: float, nt: int) -> int:
+    omega_max = float(np.sqrt(np.max(model.omegas_sq))) if model.omegas_sq.size > 0 else 0.0
+    if omega_max <= 0 or T <= 0:
+        return nt
+
+    dt_target = min(0.01, 0.03 / omega_max)
+    nt_recommended = int(np.ceil(T / dt_target)) + 1
+    return max(nt, nt_recommended)
+
+
 def simulate_closed_loop(model: MembraneModel, K: np.ndarray, x_init: np.ndarray, T: float = 6.0, nt: int = 800):
     def rhs(_t: float, x: np.ndarray) -> np.ndarray:
         u = float(-(K @ x).item())
         return model.A @ x + model.B[:, 0] * u
 
-    t_eval = np.linspace(0.0, T, nt)
+    nt_safe = _choose_nt_for_stability(model, T, nt)
+    t_eval = np.linspace(0.0, T, nt_safe)
     sol = solve_ivp(rhs, (0.0, T), x_init, t_eval=t_eval, rtol=1e-8, atol=1e-10)
     controls = np.array([float(-(K @ sol.y[:, j]).item()) for j in range(sol.y.shape[1])])
     return sol.t, sol.y, controls
@@ -151,7 +162,8 @@ def simulate_open_loop(model: MembraneModel, x_init: np.ndarray, T: float = 6.0,
     def rhs(_t: float, x: np.ndarray) -> np.ndarray:
         return model.A @ x
 
-    t_eval = np.linspace(0.0, T, nt)
+    nt_safe = _choose_nt_for_stability(model, T, nt)
+    t_eval = np.linspace(0.0, T, nt_safe)
     sol = solve_ivp(rhs, (0.0, T), x_init, t_eval=t_eval, rtol=1e-8, atol=1e-10)
     return sol.t, sol.y
 
