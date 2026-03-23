@@ -12,3 +12,13 @@ def test_single_mode_reconstruction_vanishes_on_boundary():
     assert np.allclose(U[-1, :], 0.0)
     assert np.allclose(U[:, 0], 0.0)
     assert np.allclose(U[:, -1], 0.0)
+
+
+def test_build_model_includes_viscous_damping():
+    gamma = 0.3
+    model = build_model(M=2, gamma=gamma)
+    N = len(model.modes)
+    assert model.gamma == gamma
+    assert np.allclose(model.A[:N, N:], np.eye(N))
+    assert np.allclose(model.A[N:, N:], -gamma * np.eye(N))
+

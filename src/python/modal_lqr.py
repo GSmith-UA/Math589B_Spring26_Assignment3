@@ -28,6 +28,7 @@ class MembraneModel:
     beta: np.ndarray
     A: np.ndarray
     B: np.ndarray
+    gamma: float
 
 
 def build_modes(M: int) -> List[Mode]:
@@ -85,7 +86,7 @@ def build_model(
     A = np.block(
         [
             [np.zeros((N, N)), np.eye(N)],
-            [-np.diag(omegas_sq), np.zeros((N, N))],
+            [-np.diag(omegas_sq), -gamma * np.eye(N)],
         ]
     )
     B = np.vstack([np.zeros((N, 1)), beta.reshape(N, 1)])
@@ -100,6 +101,7 @@ def build_model(
         beta=beta,
         A=A,
         B=B,
+        gamma=gamma,
     )
 
 
