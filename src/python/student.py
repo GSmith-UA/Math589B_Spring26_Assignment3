@@ -41,26 +41,6 @@ def solve_ivp(fun, t_span, y0, t_eval=None, rtol=1e-8, atol=1e-10):
         y[:, i] = y[:, i-1] + h/6 * (k1 + 2*k2 + 2*k3 + k4)
     return Solution(t_eval, y)
 
-def matrix_sign(X):
-
-    tol = 1e-10
-
-    max_iter = 100
-
-    for _ in range(max_iter):
-
-        X_inv = np.linalg.inv(X)
-
-        X_new = (X + X_inv) / 2
-
-        if np.linalg.norm(X_new - X) < tol:
-
-            return X_new
-
-        X = X_new
-
-    return X
-
 def solve_continuous_are(A, B, Q, R):
     """Solve the continuous-time algebraic Riccati equation.
 

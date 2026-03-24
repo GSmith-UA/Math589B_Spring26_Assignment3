@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\title{Derivation of the Finite-Dimensional Model and Discussion of Actuator Placement}
+\author{Generated from Project Handout}
+\date{\today}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Om}{\Omega}
+\newcommand{\dd}{\,d}
+\newcommand{\p}{\partial}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newtheorem*{remark}{Remark}
+
+\begin{document}
+% \maketitle
+
+\section{Derivation of the Finite-Dimensional Model}
+
+We start with the controlled wave equation for the membrane displacement $u(x,y,t)$:
+\begin{equation}
+\label{eq:wave}
+ u_{tt}(x,y,t) = c^2 \Delta u(x,y,t) + b(t)\,\psi(x,y), 
+ \qquad (x,y)\in\Omega,\ t>0,
+\end{equation}
+where $\Omega = (0,1)\times(0,1)$ is the unit square, with boundary conditions
+\begin{equation}
+\label{eq:bc}
+ u(x,y,t)=0,\qquad (x,y)\in \partial\Omega,
+\end{equation}
+and initial conditions
+\begin{equation}
+\label{eq:ic}
+ u(x,y,0)=u_0(x,y),\qquad u_t(x,y,0)=v_0(x,y).
+\end{equation}
+
+The Dirichlet Laplacian eigenfunctions on the unit square are
+\begin{equation}
+\label{eq:eigs}
+\phi_{mn}(x,y)=2\sin(m\pi x)\sin(n\pi y),\qquad m,n\ge 1,
+\end{equation}
+with eigenvalues
+\begin{equation}
+\label{eq:eigvals}
+\lambda_{mn}=\pi^2(m^2+n^2).
+\end{equation}
+These form an orthonormal basis of $L^2(\Omega)$.
+
+We expand the solution as
+\begin{equation}
+\label{eq:expansion}
+ u(x,y,t)=\sum_{m=1}^{\infty}\sum_{n=1}^{\infty} q_{mn}(t)\,\phi_{mn}(x,y).
+\end{equation}
+
+Substituting into the PDE \eqref{eq:wave} and projecting onto mode $(m,n)$ yields
+\begin{equation}
+\label{eq:modalode}
+ \ddot q_{mn}(t) + c^2\lambda_{mn} q_{mn}(t) = \beta_{mn}\, b(t),
+\end{equation}
+where
+\begin{equation}
+\label{eq:beta-general}
+\beta_{mn}=\int_0^1\!\int_0^1 \psi(x,y)\phi_{mn}(x,y)\,\dd x\,\dd y.
+\end{equation}
+For a point actuator at $(x_0,y_0)$, this simplifies to
+\begin{equation}
+\label{eq:beta-point}
+\beta_{mn}=\phi_{mn}(x_0,y_0)=2\sin(m\pi x_0)\sin(n\pi y_0).
+\end{equation}
+
+To obtain a finite-dimensional approximation, we truncate to modes with $1 \leq m,n \leq M$, giving $N = M^2$ modes. We flatten the indices and define the state vector
+\[
+q(t)=\begin{bmatrix} q_1(t) \\ \vdots \\ q_N(t) \end{bmatrix},
+\qquad
+p(t)=\dot q(t).
+\]
+Let
+\[
+\omega_k^2=c^2\lambda_k,
+\qquad
+\beta=\begin{bmatrix}\beta_1 \\ \vdots \\ \beta_N\end{bmatrix},
+\qquad
+\Omega_N = \operatorname{diag}(\omega_1^2,\dots,\omega_N^2).
+\]
+The system becomes
+\begin{equation}
+\label{eq:firstorder}
+\dot x = A x + B b,
+\qquad
+x=\begin{bmatrix} q \\ p \end{bmatrix}\in\R^{2N},
+\end{equation}
+with
+\begin{equation}
+\label{eq:AB}
+A=
+\begin{bmatrix}
+0 & I \\
+-\Omega_N & 0
+\end{bmatrix},
+\qquad
+B=
+\begin{bmatrix}
+0 \\
+\beta
+\end{bmatrix}.
+\end{equation}
+
+The energy of the system is
+\begin{equation}
+\label{eq:energy}
+E(t)=\frac12\sum_{k=1}^N \left(p_k(t)^2 + \omega_k^2 q_k(t)^2\right).
+\end{equation}
+
+For LQR control, we minimize the cost
+\begin{equation}
+\label{eq:cost}
+J(b)=\int_0^{\infty} \left( x(t)^T Q x(t) + R\,b(t)^2 \right)\dd t,
+\end{equation}
+with a physically motivated choice
+\begin{equation}
+\label{eq:Qchoice}
+Q=
+\begin{bmatrix}
+\alpha\,\Omega_N & 0 \\
+0 & \beta_v I
+\end{bmatrix},
+\qquad \alpha>0,\ \beta_v>0.
+\end{equation}
+
+The optimal feedback is $b(t) = -K x(t)$, where $K = R^{-1} B^T P$ and $P$ solves the algebraic Riccati equation
+\begin{equation}
+\label{eq:ARE}
+A^T P + P A - P B R^{-1} B^T P + Q = 0.
+\end{equation}
+
+\section{Discussion of Actuator Placement and Uncontrollable Modes}
+
+The actuator location significantly affects which modes can be directly controlled. The coupling coefficient for mode $(m,n)$ is
+\[
+\beta_{mn} = 2 \sin(m\pi x_0) \sin(n\pi y_0)
+\]
+for the point-actuator model.
+
+If $\beta_{mn} = 0$ for a particular mode, that mode is not directly actuated and may remain uncontrollable. This is particularly problematic for symmetric placements.
+
+For example, at the center $(x_0, y_0) = (0.5, 0.5)$,
+\[
+\beta_{mn} = 2 \sin\left(\frac{m\pi}{2}\right) \sin\left(\frac{n\pi}{2}\right),
+\]
+which vanishes whenever $m$ or $n$ is even. Thus, many modes are missed, potentially leaving the system underactuated.
+
+To ensure better controllability, an off-center location such as $(x_0, y_0) = (0.37, 0.61)$ is recommended, as it breaks symmetry and typically provides nonzero coupling to the first many modes.
+
+In practice, actuator placement should be chosen to maximize the number of controllable modes within the truncation, ensuring effective stabilization of the membrane vibrations.
+
+\end{document}
